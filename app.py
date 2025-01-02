@@ -1,46 +1,29 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
+import os
 
 app = Flask(__name__)
 
-# Configuração do banco de dados (substitua pelo PostgreSQL do Railway)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///financas.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Configurar a URL do banco de dados a partir da variável de ambiente
+DATABASE_URL = os.getenv("DATABASE_URL")  # Railway define automaticamente esta variável
+if DATABASE_URL is None:
+    raise ValueError("A variável DATABASE_URL não está definida!")
+
+# Ajustar a URL do banco de dados para ser compatível com o SQLAlchemy
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
 db = SQLAlchemy(app)
 
-# Modelo de transação
-class Transacao(db.Model):
+# Modelo de exemplo
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    descricao = db.Column(db.String(120), nullable=False)
-    valor = db.Column(db.Float, nullable=False)
-    tipo = db.Column(db.String(10), nullable=False)
+    name = db.Column(db.String(80), nullable=False)
 
-# Inicializa o banco de dados
-db.create_all()
-
-# Rota para adicionar transações
-@app.route('/adicionar', methods=['POST'])
-def adicionar():
-    data = request.json
-    nova_transacao = Transacao(
-        descricao=data['descricao'],
-        valor=data['valor'],
-        tipo=data['tipo']
-    )
-    db.session.add(nova_transacao)
-    db.session.commit()
-    return jsonify({'message': 'Transação adicionada com sucesso!'})
-
-# Rota para listar transações
-@app.route('/transacoes', methods=['GET'])
-def transacoes():
-    transacoes = Transacao.query.all()
-    return jsonify([{
-        'id': t.id,
-        'descricao': t.descricao,
-        'valor': t.valor,
-        'tipo': t.tipo
-    } for t in transacoes])
-
-if __name__ == '__main__':
-    app.run(debug=True)
+# Rota inicial para verificar se o app está rodando
+@app.route("/")
+def index():
+    return jsonify({

@@ -4,7 +4,8 @@ import os
 import os
 
 # Obter a variável de ambiente DATABASE_URL
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{PGDATABASE}}
+
 
 if not DATABASE_URL:
     raise ValueError("A variável DATABASE_URL não está definida!")

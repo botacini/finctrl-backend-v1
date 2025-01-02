@@ -4,12 +4,12 @@ import os
 
 app = Flask(__name__)
 
-# Configurar a URL do banco de dados a partir da variável de ambiente
+# Configuração do banco de dados
 DATABASE_URL = os.getenv("DATABASE_URL")  # Railway define automaticamente esta variável
 if DATABASE_URL is None:
     raise ValueError("A variável DATABASE_URL não está definida!")
 
-# Ajustar a URL do banco de dados para ser compatível com o SQLAlchemy
+# Ajustar a URL para SQLAlchemy
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
@@ -23,7 +23,15 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
 
-# Rota inicial para verificar se o app está rodando
+# Rota inicial
 @app.route("/")
 def index():
-    return jsonify({
+    return jsonify({"message": "Backend funcionando corretamente!"})
+
+# Inicializar o banco de dados
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
